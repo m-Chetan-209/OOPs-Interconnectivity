@@ -1,0 +1,40 @@
+## Pointers and Memory
+
+RAM is a huge row of numbered boxes, one byte each. A box's number is its **address**. A variable is just a named group of boxes: an `int` takes 4 boxes, a `char` takes 1.
+
+```c
+int x = 5;
+int *p = &x;   // p stores x's ADDRESS
+```
+
+| Address | Value | Name |
+|---------|-------|------|
+| 1000    | 5     | x    |
+| 1008    | 1000  | p ← "points to" x |
+
+- `&x` means "address of x"
+- `*p` means "go to the address stored in `p`"
+- `*p = 10;` changes `x` to 10
+
+A pointer is just a variable whose value is an address. Java references and Python names are pointers in disguise, which is why this lesson matters for all three languages.
+
+## Stack vs Heap
+
+**Stack:** memory for function calls. It's automatic and very fast. Local variables live here and vanish when the function returns.
+
+**Heap:** memory you request manually (`malloc` in C, `new` in C++). It lives until you free it, and it's slower and can fragment.
+
+```c
+int *arr = malloc(3 * sizeof(int)); // 12 bytes on the heap
+arr[0] = 7;
+free(arr); // forgetting this = memory leak
+```
+
+## Common Confusion: `p` vs `*p`
+
+They are two different things:
+
+- `p` holds an **address** (say 1000). It's a sticky note with a house address on it.
+- `*p` means "go to that address and use what's stored there." It's the house itself.
+
+So `p` doesn't have the value of `x`, it has the *location* of `x`. `*p` is what you get by following that location, which is why it equals `x`'s value.
