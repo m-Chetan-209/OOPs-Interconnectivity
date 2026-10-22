@@ -175,3 +175,153 @@ Stack                 Heap
 `sizeof(Buffer)` is just 8, the pointer. The 400 bytes are separate, on the heap.
 
 In C you had to remember `free`. Here, when the stack object `b` ends, the destructor releases the heap memory for you. This idea, **tying heap memory to an object's lifetime**, is called **RAII** and is the heart of C++ memory management.
+
+## `new`
+
+- `new` reserves space on the **heap**.
+- `new` **returns an address**.
+
+```cpp
+Point *q = new Point(1, 2);   // q holds the address of a Point, so *q is a Point
+```
+
+```
+Stack              Heap (address 5000)
+┌──────────┐      ┌─────────┐
+│ q = 5000 │ ───► │ x = 1   │
+└──────────┘      │ y = 2   │
+  (8 bytes)       └─────────┘
+                    (8 bytes)
+```
+
+`new Point(1, 2)` reserves 8 heap bytes, runs the constructor on them, and returns their address.
+
+### Why `int *q` would be wrong
+
+```cpp
+int *q = new Point(1, 2);   // ✗ type mismatch
+```
+
+`new Point(1, 2)` returns the address of a `Point`. Putting that into an `int *` is a type mismatch. The type in front of the star must match what `new` creates.
+
+---
+
+## `delete`
+
+Heap memory stays reserved until you free it. `delete` is how you free a heap object.
+
+```cpp
+Point *q = new Point(4, 6);
+// ... use q ...
+delete q;
+```
+
+`delete q;` does two things, **in this order**:
+
+1. **Runs the object's destructor**, with `this` holding the address in `q`.
+2. **Frees the 8 heap bytes**, giving them back.
+
+For `Point`, the destructor does nothing visible, so step 1 is easy to miss. If the object held heap memory of its own (like `Buffer`), freeing it is the job of that destructor, triggered by `delete q`. That is why `delete` is safer than a bare `free`, which would not run the destructor.
+
+| | Does |
+|---|---|
+| `new Point(4, 6)` | reserve heap bytes, then run the constructor |
+| `delete q` | run the destructor, then free the heap bytes |
+
+`delete` frees the **heap object**, not `q`. The pointer `q` is a stack variable and vanishes on its own at `}`.
+
+Pairs: `new` goes with `delete`, and `new[]` goes with `delete[]`.
+
+### Forgetting `delete`
+
+```cpp
+void f() {
+    Point *q = new Point(4, 6);
+}   // q vanishes, the 8 heap bytes stay reserved → memory leak
+```
+
+### What `q` holds after `delete`
+
+```cpp
+delete q;   // say q was 5000
+```
+
+`q` still holds the number 5000, but the memory there is no longer yours. Using `q->x` now is **undefined behavior**: it might crash, or it might silently read garbage. A pointer in this state is called a **dangling pointer**.
+
+A common habit is to write `q = nullptr;` right after `delete q;`, so the pointer visibly points to nothing.
+
+```cpp
+void f() {
+    Point *q = new Point(1, 2);
+    delete q;      // q is now dangling: don't touch q->x
+}                  // q vanishes, the dangling pointer is gone
+```
+
+Once the function closes with `}`, `q` itself is gone, so that dangling pointer no longer exists. (A **copy** of the address stored in a longer-lived pointer would still dangle.)
+
+### Summary
+
+- `new Point(1, 2)`: reserve heap bytes, run the constructor, return the address
+- `delete q`: run the destructor, free the heap bytes
+- Forget `delete`: memory leak
+- Use `q` after `delete`: dangling pointer, undefined behavior
+
+---
+
+## `public` vs `private`
+
+### The problem: everything public
+
+```cpp
+class Account {
+public:
+    int balance;
+};
+
+Account a;
+a.balance = 100;
+a.balance = -999999;   // nothing stops this
+```
+
+Anyone can put nonsense into `balance`. If the class wants a rule like "balance never goes negative," it has no way to enforce it.
+
+### The fix: `private`
+
+```cpp
+class Account {
+private:
+    int balance;                 // only Account's own methods can touch this
+
+public:
+    Account()            { balance = 0; }
+    void deposit(int n)  { if (n > 0) balance += n; }
+    int  get()           { return balance; }
+};
+```
+
+- **`private`**: only the class's own methods may read or write it.
+- **`public`**: any code may use it.
+
+Now from outside the class:
+
+```cpp
+Account a;
+a.deposit(50);       // ✓ allowed: deposit is public
+a.balance = -999;    // ✗ compile error: balance is private
+```
+
+The outside code must go through `deposit`, which checks `n > 0` first. The rule is enforced in one place: the class.
+
+The test for any line: **who is writing it, a method of the class or someone else?** `balance = 0;` in the constructor is allowed, because the constructor belongs to the class. `a.balance = 5;` in outside code is not.
+
+If you write neither word in a `class`, the default is `private`. In a `struct`, the default is `public`.
+
+### Key points
+
+- `public`: any code may use it. `private`: only the class's own methods may.
+- `private` does **not** mean "nobody can change this." It means **only code inside the class can change it**.
+- It is a **compile-time rule**. The compiler rejects illegal access, and the running program never sees the words `public` or `private`.
+- It adds **no memory and no speed cost**. Fields take the same memory whether public or private, and methods take no per-object memory.
+- It protects against accidental misuse, not deliberate tricks. It is not security.
+
+---
