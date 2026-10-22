@@ -33,30 +33,12 @@ free(q);
 - `struct Point` is a type you created, just like `int`. So `struct Point *q` reads as "q is a pointer to a `struct Point`", the same pattern as `int *p`.
 - `*q` is the struct object itself.
 - `q` (the pointer) is on the stack. The struct it points to is on the heap.
+- `.` always needs a **struct** on its left. `p` is a struct, and `(*q)` is a struct, but `q` alone is just an address.
 
 ---
 
-## 3. When to use `.` and when to use `->`
-
-**Case 1: the variable is the struct.** The fields are right inside it, so use `.`
-
-```c
-struct Point p = {3, 4};
-p.x = 99;      // p IS the struct → dot
-```
-
-**Case 2: the variable is a pointer.** It only holds an address, so the fields are not inside it. First follow the address, then pick the field. `->` does both steps at once.
-
-```c
-struct Point *q = &p;
-q->x = 99;     // q holds an address → follow it, then pick x
-```
-
-Rule: `.` always needs a **struct** on its left. `p` is a struct, and `(*q)` is a struct, but `q` alone is just an address.
-
----
-
-## 4. Why this is "OOP". Example-
+## 3. Why this is "OOP"?
+## Example-
 
 ```c
 void move(struct Point *self, int dx) { self->x += dx; }
@@ -67,16 +49,16 @@ move(&p, 5);
 
 `self` receives the address of `p`, so `self->x += dx` goes to `p`'s memory and changes `x` from 3 to 8. Afterwards `p` is `{8, 4}`.
 
+- **Confusion:** There is only 1 struct. p and *self mean the same struct because *self = &p.
+
 An **object** is data (`p`), and `move` is an operation on that data. The only link is that the object's address is passed as the first argument.
 
 - C++: `p.move(5)` secretly passes `&p` as `this`
 - Python: `p.move(5)` secretly passes `p` as `self`
 
-Passing the address (not a copy) is what lets the function change the original.
-
 ---
 
-## 5. Optimizing padding
+## 4. Optimizing padding
 
 **Alignment:** the CPU wants each field to start at an address divisible by its own size. The compiler inserts empty bytes (**padding**) to make that happen, and the total size rounds up to a multiple of the largest field's alignment.
 
