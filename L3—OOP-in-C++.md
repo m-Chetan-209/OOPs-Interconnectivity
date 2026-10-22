@@ -155,7 +155,7 @@ At the closing `}`, the destructor runs `delete p;`, so the 4 heap bytes are fre
 class Buffer {
 public:
     int *data;
-    Buffer(int n) { data = new int[n]; }   // acquire heap memory
+    Buffer(int n) { data = new int[n]; }   // 'n' i.e number of integers, goes in HEAP AREA.
     ~Buffer()     { delete[] data; }       // release it
 };
 
