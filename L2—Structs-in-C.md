@@ -51,7 +51,7 @@ move(&p, 5);
 
 - **Confusion:** There is only 1 struct. p and *self mean the same struct because *self = &p.
 
-An **object** is data (`p`), and `move` is an operation on that data. The only link is that the object's address is passed as the first argument.
+The data i.e. (`p`) is the **object**, and `move` is an operation on that data. The only link is that the object's address is passed as the first argument.
 
 - C++: `p.move(5)` secretly passes `&p` as `this`
 - Python: `p.move(5)` secretly passes `p` as `self`
