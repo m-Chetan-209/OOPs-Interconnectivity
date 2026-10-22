@@ -174,6 +174,30 @@ Stack                 Heap
 
 `sizeof(Buffer)` is just 8, the pointer. The 400 bytes are separate, on the heap.
 
+### What does `Buffer b(100);` really mean?
+
+```cpp
+Buffer b(100);
+```
+
+This one line does two things:
+
+1. **Declaration:** it creates space for the object. The space holds garbage right now.
+2. **Constructor call:** it calls the constructor, and finally the object is made.
+
+#### Constructors with and without parameters
+
+```cpp
+Point(int a, int b) { ... }    // needs 2 values
+Account() { balance = 0; }     // needs nothing
+```
+
+```cpp
+Point   p(3, 4);   // constructor takes 2 values, you give them
+Account a;         // constructor takes 0 values, so no parentheses
+```
+
+
 In C you had to remember `free`. Here, when the stack object `b` ends, the destructor releases the heap memory for you. This idea, **tying heap memory to an object's lifetime**, is called **RAII** and is the heart of C++ memory management.
 
 ## `new`
