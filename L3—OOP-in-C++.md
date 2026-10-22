@@ -180,12 +180,12 @@ Stack                 Heap
 Buffer b(100);
 ```
 
-This one line does two things:
+This line means two things:
 
-1. **Declaration:** it creates space for the object. The space holds garbage right now.
-2. **Constructor call:** it calls the constructor, and finally the object is made.
+1. **Declaration:** It declares an object b which means basically the object is created but holds garbage value. 
+2. **Constructor call:** it calls the constructor, and the object is ready to use. 
 
-#### Constructors with and without parameters
+### Constructors with and without parameters
 
 ```cpp
 Point(int a, int b) { ... }    // needs 2 values
