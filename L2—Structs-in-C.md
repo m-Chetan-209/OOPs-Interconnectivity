@@ -34,14 +34,6 @@ free(q);
 - `*q` is the struct object itself.
 - `q` (the pointer) is on the stack. The struct it points to is on the heap.
 
-```
-Stack                 Heap
-┌─────────────┐      ┌─────────────┐
-│ q = 5000    │ ───► │ x           │
-└─────────────┘      │ y           │
-                     └─────────────┘
-```
-
 ---
 
 ## 3. When to use `.` and when to use `->`
@@ -64,12 +56,12 @@ Rule: `.` always needs a **struct** on its left. `p` is a struct, and `(*q)` is 
 
 ---
 
-## 4. Why this is "OOP"
+## 4. Why this is "OOP". Example-
 
 ```c
 void move(struct Point *self, int dx) { self->x += dx; }
 
-struct Point p = {3, 4};
+struct Point p = {3, 4}; // x is 3 and y is 4
 move(&p, 5);
 ```
 
@@ -141,6 +133,7 @@ struct S { double b; char a; char c; };   // 16 bytes (good order)
 ```
 
 Good order: `b` at 0, `a` at 8, `c` at 9, then 6 bytes of end padding. Total 16, with only 10 bytes of real data.
+**DECLARE LARGE FIELDS FIRST, SMALL FIELDS AFTER**
 
 ### Takeaways
 
