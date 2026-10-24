@@ -1,7 +1,6 @@
 # C++ Classes and Memory
 
-A C++ class is the struct you already know, plus methods, access control, and automatic setup and cleanup.
-In short: **a class is a struct that carries its functions.**
+A C++ class is the struct you already know, plus methods, access control, and automatic setup and cleanup. In short: **a class is a struct that carries its functions.**
 
 ```cpp
 class Point {
@@ -13,8 +12,10 @@ public:
     void move(int dx) { x += dx; }          // method
 };
 
-Point p(3, 4);   // stack object
-p.move(5);       // p is now {8, 4}
+int main() {
+    Point p(3, 4);   // stack object (a variable inside a function)
+    p.move(5);       // p is now {8, 4}
+}
 ```
 
 Methods are not stored inside the object. They live once in the program's code, shared by all objects.
@@ -25,10 +26,12 @@ Methods are not stored inside the object. They live once in the program's code, 
 - **Object:** one actual variable built from the blueprint, with real bytes in memory.
 
 ```cpp
-Point p(3, 4);
-//  │    │  └── constructor arguments
-//  │    └───── object (instance) name
-//  └────────── class name / type
+int main() {
+    Point p(3, 4);
+    //  │    │  └── constructor arguments
+    //  │    └───── object (instance) name
+    //  └────────── class name / type
+}
 ```
 
 Creating an object from a class is called **instantiation**.
@@ -50,9 +53,11 @@ void Point_move(Point *this, int dx) { this->x += dx; }
 `p.move(5)` becomes `Point_move(&p, 5)`. Inside a method, writing `x` secretly means `this->x`. C++ makes this implicit.
 
 ```cpp
-Point a;  a.x = 1;  a.y = 2;
-Point b;  b.x = 10; b.y = 20;
-a.move(5);
+int main() {
+    Point a(1, 2);
+    Point b(10, 20);
+    a.move(5);        // a is {6, 2}, b is still {10, 20}
+}
 ```
 
 - **`a` and `b` afterwards:** `a` is `{6, 2}`, `b` is still `{10, 20}`.
@@ -74,7 +79,9 @@ public:
     void move(int dx) { x += dx; }
 };
 
-Point p(3, 4);   // p is the object
+int main() {
+    Point p(3, 4);   // p is the object
+}
 ```
 
 The constructor does not create the object's memory. The memory is reserved first, and the constructor then fills it in. The call `Point p(3, 4);` does this:
@@ -155,8 +162,8 @@ At the closing `}`, the destructor runs `delete p;`, so the 4 heap bytes are fre
 class Buffer {
 public:
     int *data;
-    Buffer(int n) { data = new int[n]; }   // 'n' i.e number of integers, goes in HEAP AREA.
-    ~Buffer()     { delete[] data; }       // release it
+    Buffer(int n) { data = new int[n]; }   // the n ints (not the number n) go in the HEAP area
+    ~Buffer()     { delete[] data; }       // release them
 };
 
 void f() {
@@ -180,10 +187,10 @@ Stack                 Heap
 Buffer b(100);
 ```
 
-This line means two things:
+This line does two things:
 
-1. **Declaration:** It declares an object b which means basically the object is created but holds garbage value. 
-2. **Constructor call:** it calls the constructor, and the object is ready to use. 
+1. **Declaration:** it reserves space for the object on the **stack**: 8 bytes, just the `data` pointer. That space holds garbage right now.
+2. **Constructor call:** `100` is passed into `n`, and the constructor runs `data = new int[n];`. This reserves **400 bytes on the heap** and stores their address in `b.data`. Now the object is ready to use.
 
 ### Constructors with and without parameters
 
@@ -193,10 +200,11 @@ Account() { balance = 0; }     // needs nothing
 ```
 
 ```cpp
-Point   p(3, 4);   // constructor takes 2 values, you give them
-Account a;         // constructor takes 0 values, so no parentheses
+int main() {
+    Point   p(3, 4);   // constructor takes 2 values, you give them
+    Account a;         // constructor takes 0 values, so no parentheses
+}
 ```
-
 
 In C you had to remember `free`. Here, when the stack object `b` ends, the destructor releases the heap memory for you. This idea, **tying heap memory to an object's lifetime**, is called **RAII** and is the heart of C++ memory management.
 
@@ -206,7 +214,9 @@ In C you had to remember `free`. Here, when the stack object `b` ends, the destr
 - `new` **returns an address**.
 
 ```cpp
-Point *q = new Point(1, 2);   // q holds the address of a Point, so *q is a Point
+int main() {
+    Point *q = new Point(1, 2);   // q holds the address of a Point, so *q is a Point
+}
 ```
 
 ```
@@ -223,7 +233,9 @@ Stack              Heap (address 5000)
 ### Why `int *q` would be wrong
 
 ```cpp
-int *q = new Point(1, 2);   // ✗ type mismatch
+int main() {
+    int *q = new Point(1, 2);   // ✗ type mismatch
+}
 ```
 
 `new Point(1, 2)` returns the address of a `Point`. Putting that into an `int *` is a type mismatch. The type in front of the star must match what `new` creates.
@@ -235,9 +247,11 @@ int *q = new Point(1, 2);   // ✗ type mismatch
 Heap memory stays reserved until you free it. `delete` is how you free a heap object.
 
 ```cpp
-Point *q = new Point(4, 6);
-// ... use q ...
-delete q;
+int main() {
+    Point *q = new Point(4, 6);
+    // ... use q ...
+    delete q;
+}
 ```
 
 `delete q;` does two things, **in this order**:
@@ -247,10 +261,10 @@ delete q;
 
 For `Point`, the destructor does nothing visible, so step 1 is easy to miss. If the object held heap memory of its own (like `Buffer`), freeing it is the job of that destructor, triggered by `delete q`. That is why `delete` is safer than a bare `free`, which would not run the destructor.
 
-| | Does |
-|---|---|
+|                   | Does                                         |
+|-------------------|----------------------------------------------|
 | `new Point(4, 6)` | reserve heap bytes, then run the constructor |
-| `delete q` | run the destructor, then free the heap bytes |
+| `delete q`        | run the destructor, then free the heap bytes |
 
 `delete` frees the **heap object**, not `q`. The pointer `q` is a stack variable and vanishes on its own at `}`.
 
@@ -267,7 +281,10 @@ void f() {
 ### What `q` holds after `delete`
 
 ```cpp
-delete q;   // say q was 5000
+int main() {
+    Point *q = new Point(4, 6);   // say q is 5000
+    delete q;                     // q still holds 5000, but the memory is freed
+}
 ```
 
 `q` still holds the number 5000, but the memory there is no longer yours. Using `q->x` now is **undefined behavior**: it might crash, or it might silently read garbage. A pointer in this state is called a **dangling pointer**.
@@ -302,9 +319,11 @@ public:
     int balance;
 };
 
-Account a;
-a.balance = 100;
-a.balance = -999999;   // nothing stops this
+int main() {
+    Account a;
+    a.balance = 100;
+    a.balance = -999999;   // nothing stops this
+}
 ```
 
 Anyone can put nonsense into `balance`. If the class wants a rule like "balance never goes negative," it has no way to enforce it.
@@ -329,9 +348,11 @@ public:
 Now from outside the class:
 
 ```cpp
-Account a;
-a.deposit(50);       // ✓ allowed: deposit is public
-a.balance = -999;    // ✗ compile error: balance is private
+int main() {
+    Account a;
+    a.deposit(50);       // ✓ allowed: deposit is public
+    a.balance = -999;    // ✗ compile error: balance is private
+}
 ```
 
 The outside code must go through `deposit`, which checks `n > 0` first. The rule is enforced in one place: the class.
