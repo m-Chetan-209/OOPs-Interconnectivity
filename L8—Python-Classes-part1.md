@@ -1,3 +1,5 @@
+# About Python Classes— init, str, methods, variables, etc.
+
 ## Doubt Killer before Beginning
 
 **Every Python object lives on the heap**
@@ -19,7 +21,7 @@
 
 ---
 
-# A class with `__init__` and `self`
+## A class with `__init__` and `self`
 
 You know the C++ version of `Point`:
 
