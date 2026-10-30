@@ -443,10 +443,10 @@ So far every method took `self`, so it worked on one object. Sometimes you want 
 
 ```python
 class Car:
-    count = 0                       # class variable, shared by all cars
+    count = 0                       # class variable, shared by all cars. Outside the constructor, this is the class data- shared by all objects.
 
     def __init__(self, color):
-        self.color = color
+        self.color = color          # instance variable. shared by one object as defined.
         Car.count += 1              # one more car exists
 
     @classmethod
