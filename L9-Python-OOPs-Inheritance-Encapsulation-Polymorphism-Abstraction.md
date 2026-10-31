@@ -30,14 +30,6 @@ print(c.wheels, c.doors, c.honk())  # 4 2 Beep
 
 There is **one object**, not two. `Vehicle.__init__` fills `wheels` onto the same object, then `Car.__init__` adds `doors`.
 
-```
-c (one object)                Car (class)          Vehicle (class)
-┌──────────────┐             ┌────────────┐       ┌────────────┐
-│ wheels ──► 4 │             │ __init__   │       │ __init__   │
-│ doors ──► 2  │             │ honk       │       │ honk       │
-└──────────────┘             └────────────┘       └────────────┘
-```
-
 ### Which `__init__` runs first?
 
 `Car(4, 2)` starts by running `Car.__init__`. Its first line, `super().__init__(wheels)`, runs `Vehicle.__init__` to completion, and then the rest of `Car.__init__` continues.
@@ -49,7 +41,7 @@ c (one object)                Car (class)          Vehicle (class)
 
 If `Car` had no `honk`, Python would continue to the parent class `Vehicle` and find `"..."` there. This happens because of the `(Vehicle)` in `class Car(Vehicle):`. It has nothing to do with `__init__`.
 
-### Python lets you forget the parent constructor
+### You can sleep on the parent's constructor if you want
 
 In C++ and Java, the base constructor always runs. In Python, `super().__init__(...)` is a normal call that **you** write.
 
@@ -81,10 +73,10 @@ c = Car(4, 2)
 print(c.honk())                           # ... Beep
 ```
 
-| Goal | How |
+| Goal of `super`|
 |---|---|
-| Use a parent method the child **doesn't override** | nothing special: `c.honk()` finds it by lookup |
-| Run the parent's version of a method the child **overrides** | `super().method(...)` |
+| Run a parent method the child **doesn't override**. Means the child doesn't have that method so you run the Parent's
+| Run the parent's version of a method the child **overrides**. If the child has that method, you run the parent's as well as the child's.
 
 ```python
 class Vehicle:
