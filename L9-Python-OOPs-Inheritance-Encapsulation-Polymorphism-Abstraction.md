@@ -73,10 +73,9 @@ c = Car(4, 2)
 print(c.honk())                           # ... Beep
 ```
 
-| Goal of `super`|
-|---|---|
-| Run a parent method the child **doesn't override**. Means the child doesn't have that method so you run the Parent's
-| Run the parent's version of a method the child **overrides**. If the child has that method, you run the parent's as well as the child's.
+#### Goal of `super`
+1. Run a parent method the child **doesn't override**. Means the child doesn't have that method so you run the Parent's
+2. Run the parent's version of a method the child **overrides**. If the child has that method, you run the parent's as well as the child's.
 
 ```python
 class Vehicle:
