@@ -60,9 +60,7 @@ Methods are inherited through the class chain, but fields exist only if some `__
 
 ---
 
-## What `super()` is for
-
-`super()` **runs the parent's version of a method**. There are no separate parent variables: the fields all live on the one object.
+### `super()` lets you use/call the Parent's constructor or method depending on where you're putting it. That's all to `super()`.
 
 ```python
 class Car(Vehicle):
@@ -72,10 +70,6 @@ class Car(Vehicle):
 c = Car(4, 2)
 print(c.honk())                           # ... Beep
 ```
-
-#### Goal of `super`
-1. Run a parent method the child **doesn't override**. Means the child doesn't have that method so you run the Parent's
-2. Run the parent's version of a method the child **overrides**. If the child has that method, you run the parent's as well as the child's.
 
 ```python
 class Vehicle:
@@ -89,10 +83,10 @@ class Car(Vehicle):
         super().__init__(wheels)
         self.doors = doors
     def describe(self):
-        return super().describe() + f", {self.doors} doors"
+        return super().describe() + f" {self.doors} doors"
 
 c = Car(4, 2)
-print(c.describe())                       # 4 wheels, 2 doors
+print(c.describe())                       # 4 wheels 2 doors
 ```
 
 `Car.describe` runs first, and inside it `Vehicle.describe` runs and returns `"4 wheels"`, then `Car` adds `", 2 doors"`.
