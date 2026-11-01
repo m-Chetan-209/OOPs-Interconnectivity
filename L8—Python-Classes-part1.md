@@ -59,6 +59,30 @@ Compare the two:
 
 ---
 
+### Only what you assign with `self.` lands in the object.
+
+```python
+class Account:
+    bank = "ABC"                      # written in the class body
+
+    def __init__(self, balance, owner):
+        temp = balance * 2            # a local variable
+        self.balance = balance        # assigned on self
+        owner = owner.upper()         # re-points the parameter only
+
+a = Account(100, "asha")
+print(a.__dict__)                     # {'balance': 100}
+```
+
+Inside the object there is only `balance`.
+
+| Written in the constructor | Ends up in the object? | Why |
+|---|---|---|
+| `self.balance = balance` | Yes | assigned on `self`, which is the object |
+| `balance` (the parameter) | No | a temporary name, gone when `__init__` ends |
+| `temp = ...` | No | |
+
+
 ## Methods
 
 A method is a function defined inside the class, with `self` as the first parameter:
