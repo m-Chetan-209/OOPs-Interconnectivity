@@ -41,6 +41,46 @@ There is **one object**, not two. `Vehicle.__init__` fills `wheels` onto the sam
 
 If `Car` had no `honk`, Python would continue to the parent class `Vehicle` and find `"..."` there. This happens because of the `(Vehicle)` in `class Car(Vehicle):`. It has nothing to do with `__init__`.
 
+### Method Overriding
+
+Start with a parent class that has a method:
+
+```python
+class Vehicle:
+    def honk(self):
+        return "..."
+```
+
+A child class that doesn't mention `honk` simply inherits it:
+
+```python
+class Car(Vehicle):
+    pass
+
+print(Car().honk())      # ...
+```
+
+Overriding means the child writes its own method with the same name, so the child's version is used instead of the parent's:
+
+```python
+class Car(Vehicle):
+    def honk(self):
+        return "Beep"
+
+print(Car().honk())      # Beep
+```
+
+Sometimes you need both, so you use `super()`
+
+#### Put together
+
+| What you write in Car | Car().honk() returns | What's going on |
+|---|---|---|
+| nothing | `...` | inherited, the parent's `honk` is used |
+| `return "Beep"` | Beep | overridden, the parent's version is replaced |
+| `return super().honk() + " Beep"` | `... Beep` | overridden, and the parent's version is also run with `super()` |
+
+
 ### You can sleep on the parent's constructor if you want
 
 In C++ and Java, the base constructor always runs. In Python, `super().__init__(...)` is a normal call that **you** write.
@@ -56,11 +96,13 @@ print(c.wheels)                     # ✗ AttributeError: 'Car' object has no at
 print(c.honk())                     # "..." still works
 ```
 
+
 Methods are inherited through the class chain, but fields exist only if some `__init__` created them. The fix is to run the parent's `__init__` with `super().__init__(wheels)`. It's convention to put it first, but Python doesn't force that order.
 
 ---
 
 ### `super()` lets you use/call the Parent's constructor or method depending on where you're putting it. That's all to `super()`.
+
 
 ```python
 class Car(Vehicle):
@@ -356,34 +398,74 @@ In memory, all three kinds of field are ordinary fields. The differences are onl
 
 ## `@property`: a controlled door
 
-Python does what getters and setters do in C++ and Java with `@property`, and outside code still writes plain `a.balance`:
+Python does what getters and setters do in C++ and Java with `@property`, and outside code still writes plain `a.balance`.
+
+> I was able to print the fields and change them just fine w/o property. So what's the point of this?
+>
+> And how is all this OOP?
+
+
+### Without a property: anything gets in
 
 ```python
 class Account:
     def __init__(self, balance):
-        self._balance = balance
+        self.balance = balance
+
+a = Account(100)
+a.balance = -500        # accepted: a negative balance now exists
+a.balance = "banana"    # accepted too
+```
+
+Nothing stops bad values and putting conditions in the constructor is not too helpful:
+The constructor runs once, when the object is created. So a check there guards only the starting value.
+
+```python
+class A:
+    def __init__(self, balance):
+        if balance < 0:
+            raise ValueError("negative")
+        self.balance = balance
+
+a = A(100)
+a.balance = -500
+print(a.balance)       # -500 ← the check never ran
+```
+
+The constructor checked 100 and was happy. The later line `a.balance = -500` doesn't go through the constructor at all, so the rule was bypassed.
+
+
+### First Benifit 
+
+A property's setter runs on every assignment, at creation and afterwards:
+
+```python
+class B:
+    def __init__(self, balance):
+        self.balance = balance          # goes through the setter
 
     @property
-    def balance(self):                  # runs when you READ a.balance
+    def balance(self):
         return self._balance
 
     @balance.setter
-    def balance(self, value):           # runs when you WRITE a.balance = ...
+    def balance(self, value):
         if value < 0:
-            raise ValueError("balance cannot be negative")
+            raise ValueError("negative")
         self._balance = value
 ```
 
-```python
-a = Account(100)
-print(a.balance)       # 100
-a.balance = 50         # runs the setter, allowed
-a.balance = -5         # ✗ ValueError: balance cannot be negative
-```
 
-### What really stores the number
+### The second benefit: you can change the inside later
 
-A version that prints when each method runs:
+If outside code uses `a.balance`, you can later change how the class stores it (say, in paise instead of rupees) by editing only the getter and setter. Nobody else's code breaks. With a bare field, changing the storage would break every line that touched it.
+
+- Python sees `self.balance = ...` and checks the class first. It finds that `balance` is a property.
+- Instead of creating a field, it calls the setter.
+- The setter runs `self._balance = value`, and this is the line that stores a field. The name is `_balance`.
+- So the only field that exists in the object is `_balance`.
+
+### Full Example:
 
 ```python
 class Account:
@@ -419,28 +501,14 @@ getter runs
 {'_balance': 50}
 ```
 
-1. `a.balance = 50`: Python sees `balance` is a **property** in the class, so it **calls the setter** instead of storing anything.
-2. Inside the setter, `self._balance = value` stores the number in the object. **This line is the one that stores it.**
-3. The object holds only `_balance`, and there is no field called `balance` at all.
+### How is this OOP?
 
-```
-a (object)               Account (class)
-┌────────────────┐      ┌─────────────────────────┐
-│ _balance ──► 50│      │ balance → getter, setter │
-└────────────────┘      └─────────────────────────┘
-```
+OOP isn't only "objects hold fields". The idea is that an object owns its data and the rules for it. Two of the four pillars show up here:
 
-This differs from `a.wheels = 6` in Lesson 8, which created a new field on `a`. Here the class's property intercepts the assignment first.
-
-### Check
-
-```python
-a = Account(100)     # prints nothing: __init__ writes self._balance directly
-a.balance = 70       # prints: setter runs with 70
-x = a.balance        # prints: getter runs
-```
-
-Afterwards the object stores `_balance: 70`, and `x` is 70.
+| Pillar | What it means here |
+|---|---|
+| Encapsulation | the data and its rules live together in the class, so the class controls how its data changes |
+| Abstraction | outside code uses `a.balance` without knowing or caring how it's stored |
 
 ---
 
@@ -470,7 +538,7 @@ sail
 
 `Car` and `Boat` have no common parent (apart from `object`), and there's no `virtual`. The same line, `thing.move()`, does different things depending on the real object. That is **polymorphism**.
 
-Python doesn't check *what type* the object is, only whether the **method exists**:
+Python doesn't check *what type* the object is, only whether the **method exists**, this is **Duck Typing**: if it walks like a duck and quacks like a duck, it's a duck."
 
 ```python
 class Rock:
@@ -479,7 +547,6 @@ class Rock:
 Rock().move()      # ✗ AttributeError: 'Rock' object has no attribute 'move'
 ```
 
-The error appears **at run time, only when that line runs**. In C++ and Java, the compiler would have refused the program earlier. This style is called **duck typing**: "if it walks like a duck and quacks like a duck, it's a duck."
 
 | | C++ | Java | Python |
 |---|---|---|---|
@@ -488,6 +555,12 @@ The error appears **at run time, only when that line runs**. In C++ and Java, th
 | Wrong type found | compile error | compile error | error **at run time** |
 
 Nothing new is stored in the objects. Python looks up `thing.move` at run time with the same rule as before: the object first, then its class chain. That lookup is the polymorphism, so the cost is a lookup and not a hidden `vptr`.
+
+
+### Check
+
+- In C++, what happens if you forget `virtual` and call `honk()` through a `Vehicle *` that points to a `Car`?
+- In Python and Java, why isn't any keyword needed?
 
 ### Check
 
