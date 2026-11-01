@@ -104,6 +104,21 @@ b = Car("blue")
 
 This is the same idea as C++'s `static int wheels;` or Java's `static`. A static member isn't stored in each object. It exists once, which is why `sizeof` didn't include it.
 
+So "shared" is the result of "stored once." Because there's only one copy, every object sees the same value, and if you change it on the class (`Car.wheels = 6`), all objects see the change.
+
+An analogy: instance variables are like each student's own notebook, while a class variable is like one whiteboard in the classroom that everyone reads from.
+
+One gotcha: if you write `a.wheels = 6`, Python creates a new instance variable on `a` that hides the class one. `b.wheels` is still 4.
+
+### Advantages:
+
+- Saves memory and avoids duplication.
+- One place to change, one place to be consistent.
+
+### Where do they store the class variable?
+
+In the class object itself. In Python, a class isn't just a blueprint on paper. `Car` is a real object that lives in memory, and it has its own `__dict__` holding everything defined inside it.
+
 ### How Python finds `a.wheels`
 
 When you write `a.wheels`, Python looks in order:
@@ -129,13 +144,6 @@ Car                      a                    b
                    └──────────────────┘
 ```
 
-Now `a.wheels` finds the object's own `wheels` first (6), while `b.wheels` still falls through to the class (4). This is re-pointing again: you didn't edit the shared 4, you gave `a` its own name for something else.
-
-To change the shared value for everyone, assign on the class:
-
-```python
-Car.wheels = 5      # now a and b both see 5, unless they have their own wheels
-```
 
 ### Check
 
@@ -462,28 +470,38 @@ b = Car("blue")
 print(Car.how_many())               # 2
 print(Car.honk_sound())             # Beep
 ```
-
-I ran this on Python 3.12 and it printed `2` then `Beep`.
-
-| Kind | First parameter | Gets | Can reach |
+| What each one can reach | Gets the object? | Gets the class? | Can be called before any object exists? |
 |---|---|---|---|
-| normal method | `self` | the object it was called on | the object's fields and the class |
-| `@classmethod` | `cls` | the class itself | the class variables |
-| `@staticmethod` | (none) | nothing | neither, it's a plain function that sits in the class |
+| Normal (`self`) | yes, as `self` | yes, indirectly (below) | no, it needs an object to be called on |
+| Class method (`cls`) | no | yes, as `cls` | yes |
+| Static method | no | no (only by writing the name `Car` yourself) | yes |
 
-- In `Car.how_many()`, Python passes the class `Car` in as `cls`, just as it passes the object in as `self` for a normal method. So `cls.count` is `Car.count`.
-- `honk_sound` has no `self` and no `cls`, because it needs neither. It lives in the class only to keep related code together.
-- You can call both through the class (`Car.how_many()`) or through an object (`a.how_many()`).
-- This is the same idea as `static` in C++ and Java. They are stored once, not in each object, so they add no bytes to your objects.
-- Why `Car.count += 1` and not `self.count += 1`? From Step 3: assigning through `self` would create a new instance variable on that car, and the shared count would never change.
+> "A normal method can reach both"
 
-### Doubt killer
+Right. It reaches the object through `self`, and the class in two ways:
 
-- Needs one object's data → normal method (`self`)
-- Needs the class (class variables, or building objects) → `@classmethod`
-- Needs neither → `@staticmethod`
+```python
+class Car:
+    count = 0
 
-Neither kind adds bytes to your objects. Both are stored once, in the class.
+    def __init__(self, color):
+        self.color = color
+        Car.count += 1                  # reaches the class by writing its name
+        print(type(self))               # reaches the class through the object
+```
+
+> "A class method reaches the class"
+
+Also right, and it has two real advantages:
+
+- It works with no object at all. `Car.how_many()` can run before a single `Car` has been created. A normal method can't, because there's no `self` to pass.
+- `cls` follows inheritance. In Lesson 9 I showed that `Taxi.from_text(...)` built a `Taxi`, because `cls` was `Taxi`. If you hard-code `Car(...)` instead, you always get a `Car`.
+
+So the difference isn't "who is allowed to reach what", but what is passed in without you writing it:
+
+- Normal method → the object is passed in.
+- Class method → the class is passed in.
+- Static method → nothing is passed in.
 
 ### Check
 
