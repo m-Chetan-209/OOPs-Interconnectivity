@@ -333,6 +333,7 @@ A class is itself an object.
 
 ---
 
+
 ## Encapsulation in Python
 
 C++ and Java have compiler-checked `private`. **Python has no real `private`.** It has naming conventions.
@@ -398,12 +399,11 @@ In memory, all three kinds of field are ordinary fields. The differences are onl
 
 ## `@property`: a controlled door
 
-Python does what getters and setters do in C++ and Java with `@property`, and outside code still writes plain `a.balance`.
-
 > I was able to print the fields and change them just fine w/o property. So what's the point of this?
 >
 > And how is all this OOP?
 
+Python does what getters and setters do in C++ and Java with `@property`, and outside code still writes plain `a.balance`.
 
 ### Without a property: anything gets in
 
@@ -435,7 +435,7 @@ print(a.balance)       # -500 ← the check never ran
 The constructor checked 100 and was happy. The later line `a.balance = -500` doesn't go through the constructor at all, so the rule was bypassed.
 
 
-### First Benifit 
+### The First Benifit: 
 
 A property's setter runs on every assignment, at creation and afterwards:
 
@@ -500,6 +500,14 @@ getter runs
 50
 {'_balance': 50}
 ```
+
+### Property in four lines
+
+- `balance` is a door (the property). `_balance` is the room behind it (the real field).
+- Writing `b.balance = 50` runs the setter, which can check the value and then store it in `_balance`.
+- Reading `b.balance` runs the getter, which returns `_balance`.
+- Outside code always writes `b.balance`, so the class controls every change to its data. So that only positive values go in the field.
+
 
 ### How is this OOP?
 
@@ -636,6 +644,39 @@ class Blob(Shape):
 `Shape()` and `Blob()` raise a `TypeError` (`Shape` is abstract, and `Blob` never supplied `area`). `Square(3).area()` is 9.
 
 ---
+## COMMON DOUBT:-
+
+| What the name is | How you use it | Why |
+|---|---|---|
+| A normal method | `a.get_plain()`, with `()` | the parentheses mean "run it now" |
+| A property (`@property`) | `a.balance`, no `()` | Python runs the getter for you |
+| A plain field | `a.color`, no `()` | it's just a value |
+
+### Check
+
+```python
+class Car:
+    def __init__(self):
+        self._speed = 60
+
+    @property
+    def speed(self):
+        return self._speed
+
+    def honk(self):
+        return "Beep"
+```
+
+For each, say whether it works or raises an error:
+
+```python
+print(Car().speed)
+print(Car().speed())
+print(Car().honk())
+print(Car().honk)
+```
+
+
 
 ## The four pillars compared
 
