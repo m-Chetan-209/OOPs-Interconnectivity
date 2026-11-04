@@ -1,4 +1,4 @@
-# Python OOP: The Four Pillars
+# Python OOP: Inheritance and Encapsulation
 ---
 
 ## Inheritance in Python
