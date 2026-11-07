@@ -61,124 +61,7 @@ Only `drive` prints. `Rock()` has no `move`, so Python raises an `AttributeError
 
 ---
 
-## Abstraction with `abc`
-
-In C++, `virtual void speak() = 0;` made a class abstract. Python has the same thing in the **`abc` module** (abstract base classes):
-
-```python
-from abc import ABC, abstractmethod
-
-class Vehicle(ABC):                 # inherit from ABC to make it abstract
-    @abstractmethod
-    def honk(self):                 # no body needed
-        pass
-
-class Car(Vehicle):
-    def honk(self): return "Beep"   # Car supplies it
-
-class Cart(Vehicle):
-    pass                            # forgot honk
-```
-
-```python
-Vehicle()      # ✗ TypeError: Can't instantiate abstract class Vehicle without an implementation for abstract method 'honk'
-Cart()         # ✗ TypeError: same, because Cart is still abstract
-Car().honk()   # Beep
-```
-
-| | C++ | Python |
-|---|---|---|
-| How you write it | `virtual void honk() = 0;` | `@abstractmethod` inside a class that inherits `ABC` |
-| Building the abstract class | compile error | `TypeError` at run time, **when you create the object** |
-| Child forgets the method | compile error | `TypeError` at run time, when you create the child |
-
-The child must finish the job, and forgetting is caught loudly. The difference is that Python catches it only when the line `Cart()` runs, not before the program starts.
-
-### Duck typing vs `abc`
-
-- **Duck typing:** no promises. Any object with a `move()` works, and a missing method fails only when it's called.
-- **`abc`:** a promise. "Every `Vehicle` **must** have `honk`", enforced when the object is created.
-
-The class `Vehicle` takes no extra memory per object. It's one class object, like any other.
-
-### Check
-
-```python
-from abc import ABC, abstractmethod
-
-class Shape(ABC):
-    @abstractmethod
-    def area(self):
-        pass
-
-class Square(Shape):
-    def __init__(self, s):
-        self.s = s
-    def area(self):
-        return self.s * self.s
-
-class Blob(Shape):
-    pass
-```
-
-`Shape()` and `Blob()` raise a `TypeError` (`Shape` is abstract, and `Blob` never supplied `area`). `Square(3).area()` is 9.
-
----
-## COMMON DOUBT:-
-
-| What the name is | How you use it | Why |
-|---|---|---|
-| A normal method | `a.get_plain()`, with `()` | the parentheses mean "run it now" |
-| A property (`@property`) | `a.balance`, no `()` | Python runs the getter for you |
-| A plain field | `a.color`, no `()` | it's just a value |
-
-### Check
-
-```python
-class Car:
-    def __init__(self):
-        self._speed = 60
-
-    @property
-    def speed(self):
-        return self._speed
-
-    def honk(self):
-        return "Beep"
-```
-
-For each, say whether it works or raises an error:
-
-```python
-print(Car().speed)
-print(Car().speed())
-print(Car().honk())
-print(Car().honk)
-```
-
-
-
-## The four pillars compared
-
-| Pillar | C++ | Java | Python |
-|---|---|---|---|
-| **Inheritance** | `class Car : public Vehicle` | `class Car extends Vehicle` | `class Car(Vehicle):`, and multiple parents allowed (the MRO decides) |
-| **Encapsulation** | `private`, enforced by the compiler | `private`, enforced by the compiler | `_name` is a note and `__name` is a rename (neither is a lock), plus `@property` for checked access |
-| **Polymorphism** | needs `virtual` and a shared base | every method is virtual, needs a shared parent or interface | **duck typing**: any object with the right method name works |
-| **Abstraction** | `= 0` | `abstract` classes and interfaces | `ABC` and `@abstractmethod` |
-
-## Summary
-
-1. `super()` runs the **parent's version of a method**. Fields live on the one object, so there's nothing to fetch from the parent.
-2. Methods come from the class chain, but fields exist only if some `__init__` created them. That's why forgetting `super().__init__(...)` loses the parent's fields.
-3. The lookup order for `x.name` is **the object first, then each class in the MRO**, stopping at the first match.
-4. A property's setter is what stores the value (`self._balance = value`). `a.balance = 50` only triggers it.
-5. Errors in Python appear **at run time**, not at compile time: a missing method during duck typing, or creating an abstract class.
-
----
-
 ## Abstraction in Python 
-
 ### The Problem
 
 ```python
@@ -361,6 +244,7 @@ class Blob(Shape):
 `Shape()` and `Blob()` raise a `TypeError` (`Shape` is abstract, and `Blob` never supplied `area`). `Square(3).area()` is 9.
 
 ---
+
 ## COMMON DOUBT:-
 
 | What the name is | How you use it | Why |
