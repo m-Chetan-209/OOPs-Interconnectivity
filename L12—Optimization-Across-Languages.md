@@ -1,9 +1,5 @@
 # Optimization Across C++, Java and Python
 
-Measured on CPython 3.12 and g++ (`-O2`), 64-bit, on one machine. Exact times vary between computers, but the gaps shown are large everywhere. Java was not run here, so Java figures are estimates from the layouts in Lesson 6.
-
----
-
 ## 1. Why layout affects speed
 
 The CPU is fast, but **reading from RAM is slow**. So the CPU fetches memory in **chunks of about 64 bytes** (a cache line) and keeps them in a small, fast cache. This is the same chunk idea behind alignment in Lesson 2.
