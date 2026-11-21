@@ -334,3 +334,99 @@ del a
 
 1. After `del a`, what is the list's reference count: 0, or 1?
 2. So who frees it: reference counting, or the cyclic garbage collector?
+
+## Understanding `return` in Python
+> `print` talks to the **human**. `return` talks to the **code**.
+
+---
+
+### `return` vs `print`
+
+```python
+def add_print(a, b):
+    print(a + b)
+
+def add_return(a, b):
+    return a + b
+```
+
+| Call | What you see on screen | What the program gets back |
+|------|------------------------|----------------------------|
+| `add_print(2, 3)` | `5` | `None` |
+| `add_return(2, 3)` | nothing | `5` |
+
+Now try using the result in a calculation:
+
+```python
+y = add_return(2, 3) * 10   # works: y is 50
+y = add_print(2, 3) * 10    # prints 5, then ERROR: None * 10
+```
+
+- `print` only **displays** a value on the screen. The program cannot use it afterwards.
+- `return` **gives** the value to the program, so it can store it, calculate with it, or pass it to another function.
+
+---
+
+### Why do I get `None`?
+
+Every function returns *something*. If you never write `return`, Python quietly returns `None`.
+
+```python
+def greet(name):
+    print("Hello", name)
+
+result = greet("Sam")   # prints: Hello Sam
+print(result)           # None
+```
+---
+
+### `return` ends the function immediately
+
+The moment `return` runs, the function stops. Nothing after it is executed.
+
+```python
+def test():
+    return 1
+    print("this never runs")
+```
+
+This is very useful for stopping early once you already know the answer.
+
+---
+
+### A real example: checking for a prime number
+
+```python
+def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, int(n**0.5) + 1):
+        if n % i == 0:
+            return False      # found a divisor: stop right now
+    return True               # no divisor found after checking everything
+```
+
+How the returns work here:
+
+- `return False` **inside** the loop: one divisor is enough proof that `n` is not prime, so the function exits immediately.
+- `return True` **after** the loop: it only runs if the loop finished without finding any divisor.
+
+The returned value can then be used directly by other code:
+
+```python
+if is_prime(7):
+    print("7 is prime")
+```
+
+### Quick summary
+
+| | `print()` | `return` |
+|---|-----------|----------|
+| Shows output on screen | Yes | No |
+| Gives a value back to the code | No | Yes |
+| Ends the function | No | Yes |
+| Value usable afterwards | No | Yes |
+
+**Remember:** a function that only prints is *showing* you something. A function that returns is *handing* something back so the rest of your program can use it.
+
+---
